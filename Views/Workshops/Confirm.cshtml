@@ -1,0 +1,32 @@
+@model WorkshopRSVP.Models.Rsvp
+
+@{
+    ViewData["Title"] = "Confirmation";
+}
+
+<h1>Registration Confirmed</h1>
+
+<div class="alert alert-success mt-3">
+    @ViewData["Message"]
+</div>
+
+<h4>Your Details:</h4>
+<table class="table" style="max-width: 500px;">
+    <tr>
+        <th>Full Name</th>
+        <td>@Model.FullName</td>
+    </tr>
+    <tr>
+        <th>Workshop</th>
+        <td>@Model.WorkshopTitle</td>
+    </tr>
+    <tr>
+        <th>Needs Accommodation</th>
+        <td>@(Model.NeedsAccommodation ? "Yes" : "No")</td>
+    </tr>
+</table>
+
+<div class="mt-3">
+    <a asp-controller="Workshops" asp-action="RsvpForm" class="btn btn-primary me-2">Register Another</a>
+    <a asp-controller="Workshops" asp-action="Registrations" class="btn btn-secondary">View All Registrations</a>
+</div>
