@@ -3,3 +3,8 @@ obj/
 *.user
 *.suo
 .vs/
+
+publish/
+*.zip
+webapp-logs/
+.azure/

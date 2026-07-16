@@ -1,0 +1,39 @@
+@model WorkshopRSVP.Models.Event
+
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<h1>@Model.Title</h1>
+
+@if (!string.IsNullOrEmpty(Model.BannerUrl))
+{
+    <div class="mb-3">
+        <img src="@Model.BannerUrl" alt="Event Banner" class="img-fluid" style="max-width: 100%; max-height: 400px;" />
+    </div>
+}
+
+<p><strong>Description:</strong> @Model.Description</p>
+<p><strong>Date:</strong> @Model.Date.ToString("yyyy-MM-dd h:mm:ss tt")</p>
+<p><strong>Location:</strong> @Model.Location</p>
+
+<h2>Attendees</h2>
+@if (Model.Attendees != null && Model.Attendees.Any())
+{
+    <ul>
+        @foreach (var attendee in Model.Attendees)
+        {
+            <li>@attendee.Name (@attendee.Email)</li>
+        }
+    </ul>
+}
+else
+{
+    <p class="text-muted">No attendees registered yet.</p>
+}
+
+<div class="mt-3">
+    <a href="/events/edit/@Model.Id" class="btn btn-primary">Edit Event</a>
+    <a href="/events/@Model.Id/attendees" class="btn btn-success">Manage Attendees</a>
+    <a href="/events" class="ms-2">Back to List</a>
+</div>

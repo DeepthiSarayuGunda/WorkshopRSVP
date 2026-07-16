@@ -1,0 +1,28 @@
+@model WorkshopRSVP.Models.Attendee
+
+@{
+    var ev = ViewBag.Event as WorkshopRSVP.Models.Event;
+    ViewData["Title"] = "Add Attendee - " + ev?.Title;
+}
+
+<h1>Add Attendee - @ev?.Title</h1>
+
+<form asp-action="Create" asp-controller="Attendees" asp-route-eventId="@ev?.Id" method="post" style="max-width: 500px;">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="EventId" />
+
+    <div class="mb-3">
+        <label asp-for="Name" class="form-label"></label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Email" class="form-label"></label>
+        <input asp-for="Email" class="form-control" type="email" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Create</button>
+    <a href="/events/@ev?.Id/attendees" class="ms-2">Back</a>
+</form>
