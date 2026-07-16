@@ -1,11 +1,17 @@
 using Microsoft.AspNetCore.Mvc;
+using WorkshopRSVP.Data;
 using WorkshopRSVP.Models;
 
 namespace WorkshopRSVP.Controllers
 {
     public class WorkshopsController : Controller
     {
-        private static List<Rsvp> _registrations = new List<Rsvp>();
+        private readonly ApplicationDbContext _context;
+
+        public WorkshopsController(ApplicationDbContext context)
+        {
+            _context = context;
+        }
 
         public IActionResult Index()
         {
@@ -20,14 +26,14 @@ namespace WorkshopRSVP.Controllers
         [HttpPost]
         public IActionResult Confirm(Rsvp model)
         {
-            _registrations.Add(model);
             ViewData["Message"] = $"Thanks for registering, {model.FullName}!";
             return View(model);
         }
 
         public IActionResult Registrations()
         {
-            return View(_registrations);
+            var registrations = _context.Rsvps.ToList();
+            return View(registrations);
         }
     }
 }
