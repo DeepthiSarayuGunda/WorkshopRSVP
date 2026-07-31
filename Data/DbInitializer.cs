@@ -11,6 +11,8 @@ namespace WorkshopRSVP.Data
             var userManager = serviceProvider.GetRequiredService<UserManager<IdentityUser>>();
             var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
+            // drop and recreate to get Identity tables
+            context.Database.EnsureDeleted();
             context.Database.EnsureCreated();
 
             // seed roles
