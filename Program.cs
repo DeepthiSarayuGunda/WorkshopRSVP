@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using WorkshopRSVP.Data;
 using WorkshopRSVP.Services;
@@ -5,23 +6,33 @@ using WorkshopRSVP.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
+builder.Services.AddRazorPages();
 
-// setting up EF Core with SQL Server connection
+// EF Core with SQL Server
 builder.Services.AddDbContext<EventManagerContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// blob service for uploading banner images
+// Identity setup with roles
+builder.Services.AddDefaultIdentity<IdentityUser>(options =>
+{
+    options.SignIn.RequireConfirmedAccount = false;
+    options.Password.RequireDigit = true;
+    options.Password.RequiredLength = 6;
+})
+.AddRoles<IdentityRole>()
+.AddEntityFrameworkStores<EventManagerContext>();
+
+// blob service for banner images
 builder.Services.AddSingleton<IBlobService, BlobService>();
 
 var app = builder.Build();
 
-// seed the database on startup
+// seed roles, users, and events
 try
 {
     using (var scope = app.Services.CreateScope())
     {
-        var context = scope.ServiceProvider.GetRequiredService<EventManagerContext>();
-        DbInitializer.Initialize(context);
+        await DbInitializer.Initialize(scope.ServiceProvider);
     }
 }
 catch (Exception ex)
@@ -39,10 +50,13 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
+
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+app.MapRazorPages();
 
 app.Run();

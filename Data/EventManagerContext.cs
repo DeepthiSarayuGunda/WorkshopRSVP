@@ -1,9 +1,11 @@
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using WorkshopRSVP.Models;
 
 namespace WorkshopRSVP.Data
 {
-    public class EventManagerContext : DbContext
+    public class EventManagerContext : IdentityDbContext<IdentityUser>
     {
         public EventManagerContext(DbContextOptions<EventManagerContext> options)
             : base(options)
@@ -17,7 +19,7 @@ namespace WorkshopRSVP.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // set up the relationship between attendee and event
+            // cascade delete so attendees get removed when event is deleted
             modelBuilder.Entity<Attendee>()
                 .HasOne(a => a.Event)
                 .WithMany(e => e.Attendees)

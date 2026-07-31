@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WorkshopRSVP.Data;
@@ -18,6 +19,8 @@ namespace WorkshopRSVP.Controllers
             _blobService = blobService;
         }
 
+        // anyone can browse events
+        [AllowAnonymous]
         [HttpGet("")]
         public async Task<IActionResult> Index()
         {
@@ -25,6 +28,7 @@ namespace WorkshopRSVP.Controllers
             return View(events);
         }
 
+        [AllowAnonymous]
         [HttpGet("details/{id}")]
         public async Task<IActionResult> Details(int id)
         {
@@ -38,12 +42,15 @@ namespace WorkshopRSVP.Controllers
             return View(ev);
         }
 
+        // only organizers can create events
+        [Authorize(Roles = "Organizer")]
         [HttpGet("create")]
         public IActionResult Create()
         {
             return View();
         }
 
+        [Authorize(Roles = "Organizer")]
         [HttpPost("create")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Event ev, IFormFile? bannerImage)
@@ -52,7 +59,6 @@ namespace WorkshopRSVP.Controllers
 
             if (ModelState.IsValid)
             {
-                // upload banner to blob storage if provided
                 if (bannerImage != null && bannerImage.Length > 0)
                 {
                     ev.BannerUrl = await _blobService.UploadFileAsync(bannerImage);
@@ -66,6 +72,8 @@ namespace WorkshopRSVP.Controllers
             return View(ev);
         }
 
+        // only organizers can edit
+        [Authorize(Roles = "Organizer")]
         [HttpGet("edit/{id}")]
         public async Task<IActionResult> Edit(int id)
         {
@@ -76,6 +84,7 @@ namespace WorkshopRSVP.Controllers
             return View(ev);
         }
 
+        [Authorize(Roles = "Organizer")]
         [HttpPost("edit/{id}")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Event ev, IFormFile? bannerImage)
@@ -93,7 +102,6 @@ namespace WorkshopRSVP.Controllers
                 }
                 else
                 {
-                    // keep the old banner if no new file was uploaded
                     var existing = await _context.Events.AsNoTracking().FirstOrDefaultAsync(e => e.Id == id);
                     if (existing != null)
                         ev.BannerUrl = existing.BannerUrl;
@@ -107,6 +115,8 @@ namespace WorkshopRSVP.Controllers
             return View(ev);
         }
 
+        // only organizers can delete
+        [Authorize(Roles = "Organizer")]
         [HttpGet("delete/{id}")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -117,6 +127,7 @@ namespace WorkshopRSVP.Controllers
             return View(ev);
         }
 
+        [Authorize(Roles = "Organizer")]
         [HttpPost("delete/{id}")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)

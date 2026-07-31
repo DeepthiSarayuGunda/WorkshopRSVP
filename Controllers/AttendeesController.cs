@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WorkshopRSVP.Data;
@@ -15,6 +16,8 @@ namespace WorkshopRSVP.Controllers
             _context = context;
         }
 
+        // any logged in user can view attendees
+        [Authorize]
         [HttpGet("")]
         public async Task<IActionResult> Index(int eventId)
         {
@@ -29,6 +32,8 @@ namespace WorkshopRSVP.Controllers
             return View(ev.Attendees);
         }
 
+        // only organizers can add attendees
+        [Authorize(Roles = "Organizer")]
         [HttpGet("create")]
         public async Task<IActionResult> Create(int eventId)
         {
@@ -40,6 +45,7 @@ namespace WorkshopRSVP.Controllers
             return View(new Attendee { EventId = eventId });
         }
 
+        [Authorize(Roles = "Organizer")]
         [HttpPost("create")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(int eventId, Attendee attendee)
@@ -62,6 +68,7 @@ namespace WorkshopRSVP.Controllers
             return View(attendee);
         }
 
+        [Authorize(Roles = "Organizer")]
         [HttpGet("edit/{id}")]
         public async Task<IActionResult> Edit(int eventId, int id)
         {
@@ -74,6 +81,7 @@ namespace WorkshopRSVP.Controllers
             return View(attendee);
         }
 
+        [Authorize(Roles = "Organizer")]
         [HttpPost("edit/{id}")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int eventId, int id, Attendee attendee)
@@ -96,6 +104,8 @@ namespace WorkshopRSVP.Controllers
             return View(attendee);
         }
 
+        // only organizers can remove attendees
+        [Authorize(Roles = "Organizer")]
         [HttpGet("delete/{id}")]
         public async Task<IActionResult> Delete(int eventId, int id)
         {
@@ -108,6 +118,7 @@ namespace WorkshopRSVP.Controllers
             return View(attendee);
         }
 
+        [Authorize(Roles = "Organizer")]
         [HttpPost("delete/{id}")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int eventId, int id)

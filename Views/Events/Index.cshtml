@@ -6,7 +6,10 @@
 
 <h1>Event Manager</h1>
 
-<a href="/events/create" class="btn btn-success mb-3">Create New Event</a>
+@if (User.IsInRole("Organizer"))
+{
+    <a href="/events/create" class="btn btn-success mb-3">Create New Event</a>
+}
 
 <table class="table table-striped">
     <thead>
@@ -25,10 +28,19 @@
                 <td>@ev.Date.ToString("yyyy-MM-dd HH:mm")</td>
                 <td>@ev.Location</td>
                 <td>
-                    <a href="/events/details/@ev.Id">Details</a> |
-                    <a href="/events/edit/@ev.Id">Edit</a> |
-                    <a href="/events/delete/@ev.Id">Delete</a> |
-                    <a href="/events/@ev.Id/attendees">Attendees</a>
+                    <a href="/events/details/@ev.Id">Details</a>
+                    @if (User.IsInRole("Organizer"))
+                    {
+                        <text> | </text>
+                        <a href="/events/edit/@ev.Id">Edit</a>
+                        <text> | </text>
+                        <a href="/events/delete/@ev.Id">Delete</a>
+                    }
+                    @if (User.Identity!.IsAuthenticated)
+                    {
+                        <text> | </text>
+                        <a href="/events/@ev.Id/attendees">Attendees</a>
+                    }
                 </td>
             </tr>
         }
