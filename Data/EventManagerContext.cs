@@ -25,6 +25,12 @@ namespace WorkshopRSVP.Data
                 .WithMany(e => e.Attendees)
                 .HasForeignKey(a => a.EventId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // index on Attendee.UserId + EventId to enforce unique registration per user per event
+            modelBuilder.Entity<Attendee>()
+                .HasIndex(a => new { a.UserId, a.EventId })
+                .IsUnique()
+                .HasFilter("[UserId] IS NOT NULL");
         }
     }
 }

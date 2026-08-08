@@ -18,6 +18,9 @@ namespace WorkshopRSVP.Models
 
         public string? BannerUrl { get; set; }
 
+        // The Identity UserId of the Organizer who created this event
+        public string? OrganizerUserId { get; set; }
+
         public List<Attendee> Attendees { get; set; } = new List<Attendee>();
     }
 }

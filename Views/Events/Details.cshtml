@@ -1,7 +1,10 @@
 @model WorkshopRSVP.Models.Event
+@using System.Security.Claims
 
 @{
     ViewData["Title"] = Model.Title;
+    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    var isRegistered = Model.Attendees?.Any(a => a.UserId == userId) ?? false;
 }
 
 <h1>@Model.Title</h1>
@@ -17,22 +20,55 @@
 <p><strong>Date:</strong> @Model.Date.ToString("yyyy-MM-dd h:mm:ss tt")</p>
 <p><strong>Location:</strong> @Model.Location</p>
 
+<!-- Organizer notification banner (hidden by default, shown via SignalR) -->
+@if (User.IsInRole("Organizer"))
+{
+    <div id="organizer-notification" class="alert alert-info d-none" role="alert">
+        <strong>Notification:</strong> <span id="notification-message"></span>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<!-- Self-registration / unregister buttons -->
 @if (User.Identity!.IsAuthenticated)
 {
-    <h2>Attendees</h2>
+    <div class="mb-3">
+        @if (!isRegistered)
+        {
+            <form asp-controller="Attendees" asp-action="Register" asp-route-eventId="@Model.Id" method="post">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-primary">Register for this Event</button>
+            </form>
+        }
+        else
+        {
+            <form asp-controller="Attendees" asp-action="Unregister" asp-route-eventId="@Model.Id" method="post">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-warning">Unregister from this Event</button>
+            </form>
+        }
+    </div>
+}
+
+<h2>Attendees (<span id="attendee-count">@(Model.Attendees?.Count ?? 0)</span>)</h2>
+
+<ul id="attendee-list">
     @if (Model.Attendees != null && Model.Attendees.Any())
     {
-        <ul>
-            @foreach (var attendee in Model.Attendees)
-            {
-                <li>@attendee.Name (@attendee.Email)</li>
-            }
-        </ul>
+        @foreach (var attendee in Model.Attendees)
+        {
+            <li>@attendee.Name (@attendee.Email)</li>
+        }
     }
-    else
-    {
-        <p class="text-muted">No attendees registered yet.</p>
-    }
+</ul>
+
+@if (Model.Attendees == null || !Model.Attendees.Any())
+{
+    <p id="no-attendees-msg" class="text-muted">No attendees registered yet.</p>
 }
 
 <div class="mt-3">
@@ -43,3 +79,54 @@
     }
     <a href="/events" class="ms-2">Back to List</a>
 </div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+    <script>
+        const eventId = "@Model.Id";
+        const isOrganizer = @(User.IsInRole("Organizer") ? "true" : "false");
+
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/eventHub")
+            .withAutomaticReconnect()
+            .build();
+
+        // Listen for live attendee count updates
+        connection.on("ReceiveAttendeeUpdate", function (count, name, email) {
+            // Update attendee count
+            document.getElementById("attendee-count").textContent = count;
+
+            // Remove "no attendees" message if it exists
+            var noMsg = document.getElementById("no-attendees-msg");
+            if (noMsg) noMsg.remove();
+
+            // Add new attendee to the list
+            var list = document.getElementById("attendee-list");
+            var li = document.createElement("li");
+            li.textContent = name + " (" + email + ")";
+            list.appendChild(li);
+        });
+
+        // Listen for private organizer notification
+        if (isOrganizer) {
+            connection.on("ReceiveOrganizerNotification", function (message) {
+                var banner = document.getElementById("organizer-notification");
+                var msgSpan = document.getElementById("notification-message");
+                msgSpan.textContent = message;
+                banner.classList.remove("d-none");
+
+                // Auto-hide after 10 seconds
+                setTimeout(function () {
+                    banner.classList.add("d-none");
+                }, 10000);
+            });
+        }
+
+        // Start connection and join event group
+        connection.start().then(function () {
+            connection.invoke("JoinEventGroup", eventId);
+        }).catch(function (err) {
+            console.error("SignalR connection error: " + err.toString());
+        });
+    </script>
+}

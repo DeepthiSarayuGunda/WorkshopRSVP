@@ -13,6 +13,9 @@ namespace WorkshopRSVP.Models
         [EmailAddress]
         public string Email { get; set; } = string.Empty;
 
+        // Links registration to the logged-in user
+        public string? UserId { get; set; }
+
         public int EventId { get; set; }
 
         public Event? Event { get; set; }

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using WorkshopRSVP.Data;
 using WorkshopRSVP.Models;
 using WorkshopRSVP.Services;
@@ -63,6 +64,9 @@ namespace WorkshopRSVP.Controllers
                 {
                     ev.BannerUrl = await _blobService.UploadFileAsync(bannerImage);
                 }
+
+                // Store the current user's Id as the event organizer
+                ev.OrganizerUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
                 _context.Events.Add(ev);
                 await _context.SaveChangesAsync();
